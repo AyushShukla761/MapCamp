@@ -76,8 +76,16 @@ router.put('/:id', islogged, isauthor,upload.single('campground[image]'), errhan
     const { id } = req.params;
     const camp=req.body.campground
     camp.image=req.file.path
+    placename = camp.location;
+    const params = {
+        q: placename,
+        format: 'json',
+        limit: 1,
+    };
+    const response = await axios.get(nominatimEndpoint, { params })
+    const geometry = { type: "Point", coordinates: [parseFloat(response.data[0].lat), parseFloat(response.data[0].lon)] }
+    camp.geometry=geometry;
     const campground = await Campground.findByIdAndUpdate(id, camp);
-
     await req.flash('success', 'Successfully updated your campground!');
     
     res.redirect(`/campgrounds/${campground._id}`)
