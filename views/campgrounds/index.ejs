@@ -1,0 +1,80 @@
+<% layout('layouts/boilerplate')%>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+<style>
+.side-button {
+    position: fixed;
+    top: 30%; /* Adjust the vertical position (e.g., center) */
+    right: 10px; /* Adjust the horizontal position (e.g., near the right edge) */
+    transform: translateY(-50%); /* Center vertically */
+    background-color: #4caf50; /* Button background color */
+    color: white; /* Text color */
+    padding: 10px 15px; /* Button padding */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    text-decoration: none; /* No underline for link */
+    font-size: 16px; /* Font size */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Optional: Shadow for depth */
+    z-index: 1000; /* Ensure the button is on top of other elements */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.side-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+</style>
+
+<div id="map" style="height:450px; width:100% "></div>
+
+<h1 class="text-center">All Campgrounds</h1>
+    <a href="/campgrounds/new" class="side-button">Add Campground</a>
+<% for (let campground of campgrounds){%>
+<div class="card" mb-3>
+    <div class="row">
+        <div class="col-md-4">
+            <img class="img-fluid" alt="" src="<%=campground.image%>">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title"><%= campground.title %> </h5>
+                <p class="card-text"><%= campground.description %></p>
+                <p class="card-text">
+                    <small class="text-muted"><%= campground.location%></small>
+                </p>
+                <a class="btn btn-primary" href="/campgrounds/<%=campground._id%>">View <%=campground.title%></a>
+            </div>
+        </div>
+    </div>
+</div>
+<% }%>
+
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster-src.js"></script>
+
+<script>
+    const campgrounds= <%- JSON.stringify(campgrounds) %>;
+</script>
+
+
+<script>
+
+    var map = L.map('map').setView([38.8792,-99.3268], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup();
+
+    for (let campground of campgrounds) {
+        var marker = L.marker(campground.geometry.coordinates)
+            .bindPopup(`<h5>${campground.title}</h5><a href="http://localhost:8080/campgrounds/${campground._id}">${campground.location}</a>`);
+        markers.addLayer(marker);
+    }
+    map.addLayer(markers);
+
+</script>

@@ -1,0 +1,234 @@
+<% layout('layouts/boilerplate')%>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        .star1 {
+            color: gold;
+            font-size: 1.5rem;
+        }
+
+        .review-container {
+            background-color: #f9f9f9;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .form-container {
+            background-color: #f9f9f9;
+        }
+
+        .star {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: lightgray;
+            transition: color 0.3s;
+        }
+
+        .star.gold{ color: gold;}
+
+        .star.selected {
+            color: gold;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+    <div class="row">
+
+        <div class="col-6 d-inline">
+            <div class="card mb-3">
+                <img src="<%=campground.image%>" class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <%= campground.title%>
+                            <p class="text-muted text-sm-end mt-2 h6">Suggested by:- <%= campground.creator.username %>
+                            </p>
+                    </h5>
+                    <p class="card-text">
+                        <%= campground.description%>
+                    </p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item text-muted">
+                        <%= campground.location%>
+                    </li>
+                    <li class="list-group-item">&#8377;<%= campground.price%>/night</li>
+                </ul>
+
+
+
+                <% if(isuser && campground.creator._id.equals(isuser._id)){ %>
+                    <div class="card-body">
+                        <a class="card-link btn btn-info" href="/campgrounds/<%=campground._id%>/edit">Edit</a>
+                        <form class="d-inline" action="/campgrounds/<%=campground._id%>?_method=DELETE" method="POST">
+                            <button class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                    <% } %>
+
+
+
+
+                        <div class="card-footer text-muted">
+                            2 days ago
+                        </div>
+            </div>
+        </div>
+        <div class="col-5 align-self-start mt-5 flex">
+            <div class="card mb-5" id="map" style="height:350px; width:100% "></div>
+            
+            <div class="form-container p-4 bg-light border rounded shadow-sm">
+                <h4 class="text-center mb-2">Please Share Your Review</h4>
+                <form action="/campgrounds/<%= campground._id %>/reviews" method="POST" id="reviewForm">
+
+                    <!-- Star Rating -->
+                    <div class="d-flex justify-content-center mb-3" id="stars">
+                        <span class="star" data-value="1">&#9733;</span>
+                        <span class="star" data-value="2">&#9733;</span>
+                        <span class="star" data-value="3">&#9733;</span>
+                        <span class="star" data-value="4">&#9733;</span>
+                        <span class="star" data-value="5">&#9733;</span>
+                    </div>
+
+                    <input type="hidden" name="review[rating]" id="ratingInput" value="">
+
+                    <!-- Comment Box -->
+                    <textarea name="review[comment]" class="form-control mb-3"
+                        placeholder="Share your thoughts about your experience..." rows="2" required></textarea>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex justify-content-center align-items-center">
+                        <button class="btn btn-primary">Share Review</button>
+                      </div>
+                      
+                </form>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <% if (campground.reviews.length===0) { %>
+                <p class="text-muted text-center">No reviews yet. Be the first to leave one!</p>
+                <% } %>
+
+                    <% for (let review of campground.reviews) { %>
+                        <div class="review-container mb-4 p-3 border rounded">
+                            <!-- Rating Section -->
+                            <div class="d-flex align-items-center mb-2">
+                                <strong class="mr-2">Rating:</strong>
+                                <div>
+                                    <% for (let i=0; i < review.rating; i++) { %>
+                                        <span class="star1">&#9733;</span>
+                                        <% } %>
+                                </div>
+                            </div>
+
+                            <!-- Comment Section -->
+                            <p class="mb-2">
+                                <strong>Comment:</strong><br>
+                                <span class="text-muted">
+                                    <%= review.comment %>
+                                </span>
+                            </p>
+
+                            <!-- User Info Section -->
+                            <p class="mb-2">
+                                <strong>By:</strong><br>
+                                <span class="text-primary font-weight-bold">
+                                    <%= review.user.username %>
+                                </span>
+                            </p>
+
+                            <!-- Delete Button (for authorized user) -->
+                            <% if (isuser && review.user._id.equals(isuser._id)) { %>
+                                <form
+                                    action="/campgrounds/<%= campground._id %>/reviews/<%= review._id %>?_method=DELETE"
+                                    method="post">
+                                    <button class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                                <% } %>
+                        </div>
+                        <% } %>
+        </div>
+    </div>
+    </div>
+    </div>
+
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+       
+       var coordinates = <%- JSON.stringify(campground.geometry.coordinates) %>;
+        var map = L.map('map').setView(coordinates, 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var marker = L.marker(coordinates).addTo(map);
+
+        marker.bindPopup(`<h5>${campground.title}</h5><p>${campground.location}</p>`).openPopup();
+    </script>
+
+
+    <script>
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('ratingInput');
+
+        let currentRating = 5;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => {
+                resetStars();
+                highlightStars(index + 1);
+            });
+
+            star.addEventListener('mouseout', () => {
+                highlightStars2(currentRating);
+            });
+
+        });
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                let value = star.getAttribute('data-value');
+                ratingInput.value = value;
+
+                stars.forEach(s => {
+                    s.classList.remove('selected');
+                });
+
+                for (let i = 0; i < value; i++) {
+                    stars[i].classList.add('selected');
+                }
+            });
+        });
+
+        function highlightStars(count) {
+            for (let i = 0; i < count; i++) {
+                stars[i].classList.add('gold');
+            }
+        }
+        function highlightStars2(count) {
+            for (let i = 0; i < count; i++) {
+                stars[i].classList.remove('gold');
+            }
+        }
+
+        // Function to reset all stars
+        function resetStars() {
+            stars.forEach(star => star.classList.remove('gold'));
+        }
+    </script>
