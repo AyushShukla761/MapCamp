@@ -72,7 +72,7 @@
 
     for (let campground of campgrounds) {
         var marker = L.marker(campground.geometry.coordinates)
-            .bindPopup(`<h5>${campground.title}</h5><a href="http://localhost:8080/campgrounds/${campground._id}">${campground.location}</a>`);
+            .bindPopup(`<h5>${campground.title}</h5><a href="/campgrounds/${campground._id}">${campground.location}</a>`);
         markers.addLayer(marker);
     }
     map.addLayer(markers);
